@@ -1,16 +1,40 @@
 import usuario from '../models/usuario';
-import Sequelize, { QueryTypes } from 'sequelize';
-import config from '../../config/database';
-
-const sequelize = new Sequelize(config);
+import sequelize from '../../config/sequelize';
+import jwt from 'jsonwebtoken';
 
 class SessionController{
-    async teste(req, res){
-        // const user = await usuario.findAll();
-        const user = await sequelize.query('SELECT nome FROM usuario', {
+    async login(req, res){
+        const sql = `SELECT
+                        * 
+                    FROM
+                        usuario us 
+                    WHERE
+                        us.email = '${req.body.email}' 
+                    AND 
+                        us.senha = '${req.body.senha}'
+                    LIMIT 0, 1`;
+
+        const user = await sequelize.query(sql, {
             model: usuario
         });
-        return res.json(user);
+
+        if(user == ''){
+            return res.status(401).json({ error: 'E-mail e/ou senha incorretos!' });
+        }
+
+        const userStringify = JSON.stringify(user);
+
+        const userParse = JSON.parse(userStringify);
+
+        const { id, nome, email } = userParse[0];
+
+        return res.json({ 
+            user: {
+                nome,
+                email
+            },
+            token: jwt.sign({ id }, 'token')
+        });
     }
 }
 
