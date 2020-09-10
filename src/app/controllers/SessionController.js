@@ -1,4 +1,4 @@
-import usuario from '../models/usuario';
+import usuario_model from '../models/usuario';
 import sequelize from '../../config/sequelize';
 import jwt from 'jsonwebtoken';
 
@@ -14,22 +14,22 @@ class SessionController{
                         us.senha = '${req.body.senha}'
                     LIMIT 0, 1`;
 
-        const user = await sequelize.query(sql, {
-            model: usuario
+        const usuario = await sequelize.query(sql, {
+            model: usuario_model
         });
 
-        if(user == ''){
+        if(usuario == ''){
             return res.status(401).json({ error: 'E-mail e/ou senha incorretos!' });
         }
 
-        const userStringify = JSON.stringify(user);
+        const userStringify = JSON.stringify(usuario);
 
         const userParse = JSON.parse(userStringify);
 
         const { id, nome, email } = userParse[0];
 
         return res.json({ 
-            user: {
+            usuario: {
                 nome,
                 email
             },

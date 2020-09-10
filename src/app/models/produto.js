@@ -1,6 +1,6 @@
 import Sequelize, { Model } from 'sequelize';
 
-class estoque extends Model{
+class produto extends Model{
     static init(sequelize){
         super.init({
             id: {
@@ -8,18 +8,18 @@ class estoque extends Model{
                 primaryKey: true,
                 autoIncremente: true
             },
-            produtoID: Sequelize.INTEGER,
-            quantidade: Sequelize.INTEGER
-        },{
+            nome: Sequelize.STRING,
+            tipo: Sequelize.STRING,
+            marca: Sequelize.STRING,
+            descricao: Sequelize.STRING,
+            valor_pago: Sequelize.FLOAT,
+            preco_base: Sequelize.FLOAT
+        }, {
             sequelize
         });
 
         return this;
     }
-
-    static associate(models){
-        this.belongsTo(models.produto, { foreignKey: 'produtoID', as: 'produto' });
-    }
 }
 
-export default estoque;
+export default produto;
