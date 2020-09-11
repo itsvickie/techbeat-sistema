@@ -1,4 +1,5 @@
 import produto_model from '../models/produto';
+import estoque_model from '../models/estoque';
 import sequelize from '../../config/sequelize';
 // import Yup from 'yup';
 import * as Yup from 'yup';
@@ -26,8 +27,22 @@ class ProdutoController{
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.INSERT,
             model: produto_model
-        }).then(resp => {
-            return res.json({ message: 'Produto cadastrado com sucesso!' })
+        }).then(async resp => {
+            const [id, ] = resp;
+
+            const sql_estoque = `INSERT INTO 
+                                    estoque ( produtoID, quantidade )
+                                 VALUES
+                                    ( ${id}, ${req.body.quantidade} )`;
+
+            await sequelize.query(sql_estoque, {
+                type: sequelize.QueryTypes.INSERT,
+                model: estoque_model
+            }).then(resp => {
+                return res.json({ message: 'Produto cadastrado com sucesso!' })
+            }).catch(err => {   
+                return res.status(400).json({ error: 'Ocorreu um erro ao cadastrar o produto!' })
+            });
         }).catch(err => {
             return res.status(400).json({ error: 'Ocorreu um erro ao cadastrar o produto!' })
         });
