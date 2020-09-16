@@ -7,6 +7,7 @@ import ProdutoController from './app/controllers/ProdutoController';
 import GastosController from './app/controllers/GastosController';
 import ClienteController from './app/controllers/ClienteController';
 import EstoqueController from './app/controllers/EstoqueController';
+import VendaController from './app/controllers/VendaController';
 
 // Login - Usuários Fixos
 routes.post('/login', SessionController.login);
@@ -23,5 +24,7 @@ routes.post('/gastos', GastosController.create);
 routes.post('/cliente', ClienteController.create);
 
 routes.put('/estoque/:id', EstoqueController.update);
+
+routes.post('/venda/:clienteID', VendaController.create);
 
 export default routes;

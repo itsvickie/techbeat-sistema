@@ -14,17 +14,51 @@ class VendaController{
             data_entrega: Yup.date().required(),
             pagamento: Yup.boolean().required(),
             entregue: Yup.boolean().required(),
-            valor_total: Yup.number().required()
+            produtos: Yup.string().required()
         });
 
         if(!(await schema.isValid(req.body))){
-            return res.status(400).json('Campos não preenchidos corretamente!')
+            return res.status(400).json('Campos não preenchidos corretamente!');
+        }
+
+        var preco_sql = '';
+        var preco_base = '';
+        var valor_total = 0;
+
+        for(var i = 0; i < ((req.body.produtos).length); i++){
+            preco_sql = `SELECT
+                            pr.preco_base AS valor
+                         FROM
+                            produto pr 
+                         WHERE
+                            pr.id = ${req.body.produtos[i].id}`;
+
+            preco_base = await sequelize.query(preco_sql, {
+                type: sequelize.QueryTypes.SELECT
+            });
+
+            const valor_unitario = (preco_base[0].valor);
+            const quantidade = (req.body.produtos[i].quantidade);
+
+            valor_total += valor_unitario * quantidade;
         }
 
         const sql = `INSERT INTO 
                         venda ( data_compra, garantia, observacoes, testado, extra, local_venda, data_entrega, pagamento, entregue, valor_total, usuarioID, clienteID )
                      VALUES
-                        ( '${req.body.data_compra}', '${req.body.garantia}', '${req.body.observacoes}', ${req.body.testado}, '${req.body.extra}', '${req.body.local_venda}', '${req.body.data_entrega}', ${req.body.pagamento}, ${req.body.entregue}, ${req.body.valor_total}, 1, 3 `
+                        ( '${req.body.data_compra}', '${req.body.garantia}', '${req.body.observacoes}', ${req.body.testado}, '${req.body.extra}', '${req.body.local_venda}', '${req.body.data_entrega}', ${req.body.pagamento}, ${req.body.entregue}, ${valor_total}, ${req.usuarioID}, ${req.params.clienteID} )`;
+
+        await sequelize.query(sql, {
+            type: sequelize.QueryTypes.INSERT,
+            model: produto_venda
+        }).then(resp => {
+            return res.json({
+                cliente: `${req.params.clienteID}`,
+                valor_total: `${valor_total}`
+            });
+        }).catch(err => {
+            return res.status(400).json({ error: 'Foi não possível realizar a compra!' });
+        })
     }
 }
 
