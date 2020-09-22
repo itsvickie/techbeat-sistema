@@ -3,8 +3,8 @@ import estoque_model from '../models/estoque';
 import sequelize from '../../config/sequelize';
 import * as Yup from 'yup';
 
-class ProdutoController{
-    async create(req, res){
+class ProdutoController {
+    async create(req, res) {
         const schema = Yup.object().shape({
             nome: Yup.string().required(),
             tipo: Yup.string().required(),
@@ -13,8 +13,8 @@ class ProdutoController{
             valor_pago: Yup.number().required(),
             preco_base: Yup.number().required()
         });
-    
-        if(!(await schema.isValid(req.body))){
+
+        if (!(await schema.isValid(req.body))) {
             return res.status(400).json('Campos não preenchidos corretamente!')
         };
 
@@ -27,7 +27,7 @@ class ProdutoController{
             type: sequelize.QueryTypes.INSERT,
             model: produto_model
         }).then(async resp => {
-            const [id, ] = resp;
+            const [id,] = resp;
 
             const sql_estoque = `INSERT INTO 
                                     estoque ( produtoID, quantidade )
@@ -39,7 +39,7 @@ class ProdutoController{
                 model: estoque_model
             }).then(resp => {
                 return res.json({ message: 'Produto cadastrado com sucesso!' })
-            }).catch(err => {   
+            }).catch(err => {
                 return res.status(400).json({ error: 'Ocorreu um erro ao cadastrar o produto!' })
             });
         }).catch(err => {
@@ -47,7 +47,7 @@ class ProdutoController{
         });
     }
 
-    async update(req, res){
+    async update(req, res) {
         const schema = Yup.object().shape({
             nome: Yup.string().required(),
             tipo: Yup.string().required(),
@@ -56,8 +56,8 @@ class ProdutoController{
             valor_pago: Yup.number().required(),
             preco_base: Yup.number().required()
         });
-    
-        if(!(await schema.isValid(req.body))){
+
+        if (!(await schema.isValid(req.body))) {
             return res.status(400).json('Campos não preenchidos corretamente!')
         }
 
@@ -67,13 +67,12 @@ class ProdutoController{
                                 produto 
                             WHERE
                                 id = ${req.params.id}`;
-        
+
         const verif_id = await sequelize.query(sql_verif, {
-            type: sequelize.QueryTypes.SELECT,
-            model: produto_model
+            type: sequelize.QueryTypes.SELECT
         });
 
-        if(verif_id == ''){
+        if (verif_id == '') {
             return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
         }
 
@@ -98,7 +97,7 @@ class ProdutoController{
         });
     }
 
-    async deactivate(req, res){
+    async deactivate(req, res) {
         const sql = `UPDATE produto 
                      SET inatividade = FALSE 
                      WHERE
@@ -109,13 +108,28 @@ class ProdutoController{
                       WHERE 
                          id = ${req.params.id}`;
 
+        const sql_verif = `SELECT
+                         * 
+                     FROM
+                         produto 
+                     WHERE
+                         id = ${req.params.id}`;
+
+        const verif_id = await sequelize.query(sql_verif, {
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (verif_id == '') {
+            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
+        }
+
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.UPDATE
         }).then(async resp => {
             await sequelize.query(sql2, {
                 type: sequelize.QueryTypes.UPDATE
             });
-            
+
             return res.json({ message: 'Produto desativado!' });
         }).catch(err => {
             return res.status(400).json({ error: 'Não foi possível desativar o produto!' })

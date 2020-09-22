@@ -12,6 +12,21 @@ class EstoqueController{
             return res.status(400).json('Campos não preenchidos corretamente!');
         }
 
+        const sql_verif = `SELECT
+                                * 
+                            FROM
+                                produto 
+                            WHERE
+                                id = ${req.params.id}`;
+        
+        const verif_id = await sequelize.query(sql_verif, {
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if(verif_id == ''){
+            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
+        }
+
         const sql = `UPDATE 
                         estoque e
                      SET 
