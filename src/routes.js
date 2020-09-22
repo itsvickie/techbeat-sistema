@@ -19,6 +19,8 @@ routes.post('/produto', ProdutoController.create);
 
 routes.put('/produto/:id', ProdutoController.update);
 
+routes.put('/produto/deactivate/:id', ProdutoController.deactivate);
+
 routes.post('/gastos', GastosController.create);
 
 routes.post('/cliente', ClienteController.create);

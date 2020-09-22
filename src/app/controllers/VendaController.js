@@ -24,6 +24,7 @@ class VendaController{
         var preco_sql = '';
         var preco_base = '';
         var valor_total = 0;
+        var produtos = '';
 
         for(var i = 0; i < ((req.body.produtos).length); i++){
             preco_sql = `SELECT
@@ -41,6 +42,7 @@ class VendaController{
             const quantidade = (req.body.produtos[i].quantidade);
 
             valor_total += valor_unitario * quantidade;
+            produtos += req.body.produtos[i].id;
         }
 
         const sql = `INSERT INTO 
@@ -51,14 +53,27 @@ class VendaController{
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.INSERT,
             model: produto_venda
-        }).then(resp => {
+        }).then(async resp => {
+            const [id, ] = resp;
+
+            for(var i = 0; i < produtos.length; i++){
+                const sql = `INSERT INTO
+                                produto_venda ( vendaID, produtoID )
+                              VALUES
+                                ( ${id}, ${produtos[i]})`;
+                
+                await sequelize.query(sql, {
+                    type: sequelize.QueryTypes.INSERT
+                });
+            }
+
             return res.json({
                 cliente: `${req.params.clienteID}`,
                 valor_total: `${valor_total}`
             });
         }).catch(err => {
             return res.status(400).json({ error: 'Foi não possível realizar a compra!' });
-        })
+        });
     }
 }
 

@@ -1,7 +1,6 @@
 import produto_model from '../models/produto';
 import estoque_model from '../models/estoque';
 import sequelize from '../../config/sequelize';
-// import Yup from 'yup';
 import * as Yup from 'yup';
 
 class ProdutoController{
@@ -97,6 +96,30 @@ class ProdutoController{
         }).catch(err => {
             return res.status(400).json({ error: 'Ocorreu um erro ao atualizar o produto!' })
         });
+    }
+
+    async deactivate(req, res){
+        const sql = `UPDATE produto 
+                     SET inatividade = FALSE 
+                     WHERE
+                         id = ${req.params.id}`;
+
+        const sql2 = `UPDATE estoque
+                      SET quantidade = 0
+                      WHERE 
+                         id = ${req.params.id}`;
+
+        await sequelize.query(sql, {
+            type: sequelize.QueryTypes.UPDATE
+        }).then(async resp => {
+            await sequelize.query(sql2, {
+                type: sequelize.QueryTypes.UPDATE
+            });
+            
+            return res.json({ message: 'Produto desativado!' });
+        }).catch(err => {
+            return res.status(400).json({ error: 'Não foi possível desativar o produto!' })
+        })
     }
 }
 
