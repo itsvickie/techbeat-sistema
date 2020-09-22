@@ -18,6 +18,23 @@ class ProdutoController {
             return res.status(400).json('Campos não preenchidos corretamente!')
         };
 
+        const sql_verif = `SELECT
+                                * 
+                            FROM
+                                produto 
+                            WHERE
+                                nome = '${req.body.nome}' 
+                                AND tipo = '${req.body.tipo}' 
+                                AND marca = '${req.body.marca}'`;
+        
+        const verif_produto = await sequelize.query(sql_verif, {
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if(verif_produto != ''){
+            return res.status(400).json({ error: 'Produto já cadastrado na base de dados!' });
+        }
+
         const sql = `INSERT INTO
                         produto ( nome, tipo, marca, descricao, valor_pago, preco_base )
                      VALUES
@@ -109,11 +126,11 @@ class ProdutoController {
                          id = ${req.params.id}`;
 
         const sql_verif = `SELECT
-                         * 
-                     FROM
-                         produto 
-                     WHERE
-                         id = ${req.params.id}`;
+                            * 
+                           FROM
+                            produto 
+                           WHERE
+                            id = ${req.params.id}`;
 
         const verif_id = await sequelize.query(sql_verif, {
             type: sequelize.QueryTypes.SELECT
