@@ -27,7 +27,7 @@ class EstoqueController{
             return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
         }
 
-        const sql = `UPDATE 
+        const sql = `UPDATE
                         estoque e
                      SET 
                         e.quantidade = ${req.body.quantidade} 

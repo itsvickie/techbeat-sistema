@@ -115,18 +115,8 @@ class ProdutoController {
     }
 
     async deactivate(req, res) {
-        const sql = `UPDATE produto 
-                     SET inatividade = FALSE 
-                     WHERE
-                         id = ${req.params.id}`;
-
-        const sql2 = `UPDATE estoque
-                      SET quantidade = 0
-                      WHERE 
-                         id = ${req.params.id}`;
-
         const sql_verif = `SELECT
-                            * 
+                            inatividade 
                            FROM
                             produto 
                            WHERE
@@ -137,8 +127,22 @@ class ProdutoController {
         });
 
         if (verif_id == '') {
-            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
+            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' });
         }
+
+        if(verif_id[0].inatividade == 0){
+            return res.status(400).json({ error: 'Produto já desativado na base de dados!' });
+        }
+
+        const sql = `UPDATE produto 
+                     SET inatividade = FALSE 
+                     WHERE
+                         id = ${req.params.id}`;
+
+        const sql2 = `UPDATE estoque
+                      SET quantidade = 0
+                      WHERE 
+                         id = ${req.params.id}`;
 
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.UPDATE
