@@ -13,7 +13,8 @@ class produto extends Model{
             marca: Sequelize.STRING,
             descricao: Sequelize.STRING,
             valor_pago: Sequelize.FLOAT,
-            preco_base: Sequelize.FLOAT
+            preco_base: Sequelize.FLOAT,
+            inatividade: Sequelize.BOOLEAN
         }, {
             sequelize
         });

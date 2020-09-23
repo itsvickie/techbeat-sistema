@@ -11,7 +11,8 @@ class ProdutoController {
             marca: Yup.string().required(),
             descricao: Yup.string().required(),
             valor_pago: Yup.number().required(),
-            preco_base: Yup.number().required()
+            preco_base: Yup.number().required(),
+            quantidade: Yup.number().integer().required()
         });
 
         if (!(await schema.isValid(req.body))) {
@@ -28,7 +29,8 @@ class ProdutoController {
                                 AND marca = '${req.body.marca}'`;
         
         const verif_produto = await sequelize.query(sql_verif, {
-            type: sequelize.QueryTypes.SELECT
+            type: sequelize.QueryTypes.SELECT,
+            model: produto_model
         });
 
         if(verif_produto != ''){
@@ -66,12 +68,12 @@ class ProdutoController {
 
     async update(req, res) {
         const schema = Yup.object().shape({
-            nome: Yup.string().required(),
-            tipo: Yup.string().required(),
-            marca: Yup.string().required(),
-            descricao: Yup.string().required(),
-            valor_pago: Yup.number().required(),
-            preco_base: Yup.number().required()
+            nome: Yup.string(),
+            tipo: Yup.string(),
+            marca: Yup.string(),
+            descricao: Yup.string(),
+            valor_pago: Yup.number(),
+            preco_base: Yup.number()
         });
 
         if (!(await schema.isValid(req.body))) {
@@ -93,18 +95,41 @@ class ProdutoController {
             return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
         }
 
-        const sql_update = `UPDATE produto p
-                            SET
-                                p.nome = '${req.body.nome}', 
-                                p.tipo = '${req.body.tipo}',
-                                p.marca = '${req.body.marca}',
-                                p.descricao = '${req.body.descricao}',
-                                p.valor_pago = ${req.body.valor_pago},
-                                p.preco_base = ${req.body.preco_base}
-                            WHERE
-                                id = ${req.params.id}`;
+        function updateQuery(){
+            let sql_mont = `UPDATE produto p SET`;
 
-        await sequelize.query(sql_update, {
+            if(req.body.nome){
+                sql_mont += ` p.nome = '${req.body.nome}',`
+            }
+
+            if(req.body.tipo){
+                sql_mont += ` p.tipo = '${req.body.tipo}',`
+            }
+
+            if(req.body.marca){
+                sql_mont += ` p.marca = '${req.body.marca}',`
+            }
+
+            if(req.body.descricao){
+                sql_mont += ` p.descricao = '${req.body.descricao}',`
+            }
+
+            if(req.body.valor_pago){
+                sql_mont += ` p.valor_pago = ${req.body.valor_pago},`
+            }
+
+            if(req.body.preco_base){
+                sql_mont += ` p.preco_base = ${req.body.preco_base},`
+            }
+
+            let sql_update = sql_mont.substr(0, (sql_mont.length - 1));
+
+            sql_update += ` WHERE id = ${req.params.id}`;
+
+            return sql_update;
+        }
+
+        await sequelize.query(updateQuery(), {
             type: sequelize.QueryTypes.UPDATE,
             model: produto_model
         }).then(resp => {
@@ -115,6 +140,15 @@ class ProdutoController {
     }
 
     async deactivate(req, res) {
+        const schema = Yup.object().shape({
+            inatividade: Yup.boolean().required()
+        });
+
+        if(!(await schema.isValid(req.body))){
+            return res.status(400).json({ error: 'Código de Inatividade não informado!' });
+            // False -> Desativar | True -> Ativar
+        }
+
         const sql_verif = `SELECT
                             inatividade 
                            FROM
@@ -130,12 +164,16 @@ class ProdutoController {
             return res.status(400).json({ error: 'Produto não encontrado na base de dados!' });
         }
 
-        if(verif_id[0].inatividade == 0){
+        if(verif_id[0].inatividade == 0 && req.body.inatividade == 0){
             return res.status(400).json({ error: 'Produto já desativado na base de dados!' });
         }
 
+        if(verif_id[0].inatividade == 1 && req.body.inatividade == 1){
+            return res.status(400).json({ error: 'Produto já ativado na base de dados!' });
+        }
+
         const sql = `UPDATE produto 
-                     SET inatividade = FALSE 
+                     SET inatividade = ${req.body.inatividade}
                      WHERE
                          id = ${req.params.id}`;
 
@@ -147,11 +185,13 @@ class ProdutoController {
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.UPDATE
         }).then(async resp => {
-            await sequelize.query(sql2, {
-                type: sequelize.QueryTypes.UPDATE
-            });
-
-            return res.json({ message: 'Produto desativado!' });
+            if(req.body.inatividade == false){
+                await sequelize.query(sql2, {
+                    type: sequelize.QueryTypes.UPDATE
+                });
+                return res.json({ message: 'Produto desativado!' });
+            }
+            return res.json({ message: 'Produto ativado!' });
         }).catch(err => {
             return res.status(400).json({ error: 'Não foi possível desativar o produto!' })
         })

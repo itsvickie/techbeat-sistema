@@ -1,9 +1,19 @@
 import usuario_model from '../models/usuario';
 import sequelize from '../../config/sequelize';
 import jwt from 'jsonwebtoken';
+import * as Yup from 'yup';
 
 class SessionController{
     async login(req, res){
+        const schema = Yup.object().shape({
+            email: Yup.string().required(),
+            senha: Yup.string().required()
+        });
+
+        if(!(await schema.isValid(req.body))){
+            return res.status(400).json('Campos não preenchidos corretamente!');
+        }
+
         const sql = `SELECT
                         * 
                     FROM
@@ -15,6 +25,7 @@ class SessionController{
                     LIMIT 0, 1`;
 
         const usuario = await sequelize.query(sql, {
+            type: sequelize.QueryTypes.SELECT,
             model: usuario_model
         });
 
@@ -22,11 +33,7 @@ class SessionController{
             return res.status(401).json({ error: 'E-mail e/ou senha incorretos!' });
         }
 
-        const userStringify = JSON.stringify(usuario);
-
-        const userParse = JSON.parse(userStringify);
-
-        const { id, nome, email } = userParse[0];
+        const { id, nome, email } = usuario[0].dataValues;
 
         return res.json({ 
             usuario: {
