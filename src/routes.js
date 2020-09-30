@@ -29,4 +29,8 @@ routes.put('/estoque/:id', EstoqueController.update);
 
 routes.post('/venda/:clienteID', VendaController.create);
 
+routes.post('/teste', ProdutoController.list);
+
+routes.get('/cliente', ClienteController.list);
+
 export default routes;

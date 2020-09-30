@@ -21,24 +21,32 @@ class VendaController{
             return res.status(400).json('Campos não preenchidos corretamente!');
         }
 
-        var preco_sql = '';
+        var sql_verif = '';
         var preco_base = '';
         var valor_total = 0;
         var produtos = '';
 
         for(var i = 0; i < ((req.body.produtos).length); i++){
-            preco_sql = `SELECT
-                            pr.preco_base AS valor
+            sql_verif = `SELECT
+                            pr.preco_base,
+                            pr.inatividade,
+                            es.quantidade
                          FROM
-                            produto pr 
+                            produto pr
+                         INNER JOIN estoque es ON
+                            es.produtoID = pr.id
                          WHERE
                             pr.id = ${req.body.produtos[i].id}`;
 
-            preco_base = await sequelize.query(preco_sql, {
+            preco_base = await sequelize.query(sql_verif, {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            const valor_unitario = (preco_base[0].valor);
+            if(preco_base[0].inatividade == 0 || preco_base[0].quantidade <= 0){
+                return res.status(400).json({ error: `O produto ${req.body.produtos[i].id} está inativo e/ou sem estoque!` });
+            } 
+
+            const valor_unitario = (preco_base[0].preco_base);
             const quantidade = (req.body.produtos[i].quantidade);
 
             valor_total += valor_unitario * quantidade;
@@ -72,7 +80,7 @@ class VendaController{
                 valor_total: `${valor_total}`
             });
         }).catch(err => {
-            return res.status(400).json({ error: 'Foi não possível realizar a compra!' });
+            return res.status(400).json({ error: 'Não foi possível realizar a compra!' });
         });
     }
 }

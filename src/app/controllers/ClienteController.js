@@ -48,6 +48,21 @@ class ClienteController{
             return res.status(400).json({ error: 'Ocorreu um erro ao cadastrar o cliente!' })
         });
     }
+
+    async list(req, res){
+        const sql = `SELECT 
+                        * 
+                    FROM 
+                        cliente`;
+
+        await sequelize.query(sql, {
+            type: sequelize.QueryTypes.SELECT
+        }).then(resp => {
+            return res.json(resp);
+        }).catch(err => {
+            return res.status(400);
+        })
+    }
 }
 
 export default new ClienteController();

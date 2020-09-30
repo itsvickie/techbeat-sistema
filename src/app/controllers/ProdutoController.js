@@ -196,6 +196,44 @@ class ProdutoController {
             return res.status(400).json({ error: 'Não foi possível desativar o produto!' })
         })
     }
+
+    async list(req, res){
+        let sql = `SELECT 
+                        id,
+                        nome, 
+                        tipo, 
+                        marca, 
+                        descricao, 
+                        preco_base 
+                    FROM 
+                        produto 
+                    WHERE 
+                        inatividade <> 0`;
+
+        if(req.body.nome){
+            sql += ` AND nome LIKE '%${req.body.nome}%'`;
+        }
+
+        if(req.body.preco_base){
+            sql += ` AND preco_base LIKE '${req.body.preco_base}.%'`;
+        }
+
+        if(req.body.tipo){
+            sql += ` AND tipo LIKE '%${req.body.tipo}%'`;
+        }
+
+        if(req.body.marca){
+            sql += ` AND marca LIKE '%${req.body.marca}%'`;
+        }
+
+        await sequelize.query(sql, {
+            type: sequelize.QueryTypes.SELECT
+        }).then(resp => {
+            return res.json(resp);
+        }).catch(err => {
+            return res.status(400);
+        });
+    }
 }
 
 export default new ProdutoController();
