@@ -73,15 +73,16 @@ class ProdutoController {
             marca: Yup.string(),
             descricao: Yup.string(),
             valor_pago: Yup.number(),
-            preco_base: Yup.number()
+            preco_base: Yup.number(),
+            inatividade: Yup.boolean()
         });
 
         if (!(await schema.isValid(req.body))) {
-            return res.status(400).json('Campos não preenchidos corretamente!')
+            return res.status(400).json('Campos não preenchidos corretamente!');
         }
 
         const sql_verif = `SELECT
-                                * 
+                                inatividade 
                             FROM
                                 produto 
                             WHERE
@@ -92,34 +93,69 @@ class ProdutoController {
         });
 
         if (verif_id == '') {
-            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' })
+            return res.status(400).json({ error: 'Produto não encontrado na base de dados!' });
+        }
+
+        if(req.body.inatividade){
+            const sql = `UPDATE produto
+                         SET inatividade = ${req.body.inatividade}
+                         WHERE 
+                            id = ${req.params.id}`;
+            
+            const sql2 = `UPDATE estoque
+                          SET quantidade = 0
+                          WHERE 
+                            id = ${req.params.id}`;
+
+            await sequelize.query(sql, {
+                type: sequelize.QueryTypes.UPDATE
+            }).then(async resp => {
+                if(req.body.inatividade == false){
+                    await sequelize.query(sql2, {
+                        type: sequelize.QueryTypes.UPDATE
+                    });
+
+                    return res.json({ message: 'Produto desativado!' });
+                }
+                return res.json({ message: 'Produto ativado!' });
+            }).catch(err => {
+                return res.status(400).json({ error: 'Não foi possível desativar o produto!' });
+            });
+        }
+
+        if(verif_id[0].inatividade == 0 && req.body.inatividade == 0){
+            return res.status(400).json({ error: 'Produto já desativado na base de dados!' });
+        }
+
+        if(verif_id[0].inatividade == 1 && req.body.inatividade == 1){
+            return res.status(400).json({ error: 'Produto já ativado na base de dados!' });
         }
 
         function updateQuery(){
-            let sql_mont = `UPDATE produto p SET`;
+            let sql_mont = `UPDATE produto p SET `;
 
             if(req.body.nome){
-                sql_mont += ` p.nome = '${req.body.nome}',`
+                sql_mont += `p.nome = '${req.body.nome}',`;
             }
 
             if(req.body.tipo){
-                sql_mont += ` p.tipo = '${req.body.tipo}',`
+                sql_mont += `p.tipo = '${req.body.tipo}',`;
             }
 
             if(req.body.marca){
-                sql_mont += ` p.marca = '${req.body.marca}',`
+                sql_mont += `p.marca = '${req.body.marca}',`;
             }
 
             if(req.body.descricao){
-                sql_mont += ` p.descricao = '${req.body.descricao}',`
+                sql_mont += `p.descricao = '${req.body.descricao}',`;
             }
 
             if(req.body.valor_pago){
-                sql_mont += ` p.valor_pago = ${req.body.valor_pago},`
+                sql_mont += `p.valor_pago = ${req.body.valor_pago},`;
             }
 
             if(req.body.preco_base){
-                sql_mont += ` p.preco_base = ${req.body.preco_base},`
+                sql_mont += `p.preco_base = ${req.body.preco_base},`;
             }
 
             let sql_update = sql_mont.substr(0, (sql_mont.length - 1));
@@ -133,9 +169,9 @@ class ProdutoController {
             type: sequelize.QueryTypes.UPDATE,
             model: produto_model
         }).then(resp => {
-            return res.json({ message: 'Produto atualizado com sucesso!' })
+            return res.json({ message: 'Produto atualizado com sucesso!' });
         }).catch(err => {
-            return res.status(400).json({ error: 'Ocorreu um erro ao atualizar o produto!' })
+            return res.status(400).json({ error: 'Ocorreu um erro ao atualizar o produto!' });
         });
     }
 

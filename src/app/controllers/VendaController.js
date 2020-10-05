@@ -24,7 +24,7 @@ class VendaController{
         var sql_verif = '';
         var preco_base = '';
         var valor_total = 0;
-        var produtos = '';
+        var produtos = [];
 
         for(var i = 0; i < ((req.body.produtos).length); i++){
             sql_verif = `SELECT
@@ -50,7 +50,7 @@ class VendaController{
             const quantidade = (req.body.produtos[i].quantidade);
 
             valor_total += valor_unitario * quantidade;
-            produtos += req.body.produtos[i].id;
+            produtos.push(req.body.produtos[i].id);
         }
 
         const sql = `INSERT INTO 

@@ -50,10 +50,27 @@ class ClienteController{
     }
 
     async list(req, res){
-        const sql = `SELECT 
+        let sql = `SELECT 
                         * 
                     FROM 
-                        cliente`;
+                        cliente
+                    WHERE 1 = 1`;
+
+        if(req.body.nome){
+            sql += ` AND nome LIKE '%${req.body.nome}%'`;
+        }
+
+        if(req.body.telefone){
+            sql += ` AND telefone LIKE '%${req.body.telefone}%'`;
+        }
+
+        if(req.body.instagram){
+            sql += ` AND instagram LIKE '%${req.body.instagram}%'`;
+        }
+
+        if(req.body.cpf){
+            sql += ` AND cpf LIKE '%${req.body.cpf}%'`;
+        }
 
         await sequelize.query(sql, {
             type: sequelize.QueryTypes.SELECT
@@ -61,7 +78,7 @@ class ClienteController{
             return res.json(resp);
         }).catch(err => {
             return res.status(400);
-        })
+        });
     }
 }
 
