@@ -73,13 +73,12 @@ class ProdutoController {
             marca: Yup.string(),
             descricao: Yup.string(),
             valor_pago: Yup.number(),
-            preco_base: Yup.number(),
-            inatividade: Yup.boolean()
+            preco_base: Yup.number()
         });
 
         if (!(await schema.isValid(req.body))) {
             return res.status(400).json('Campos não preenchidos corretamente!');
-        }
+        }  
 
         const sql_verif = `SELECT
                                 inatividade 
@@ -96,39 +95,8 @@ class ProdutoController {
             return res.status(400).json({ error: 'Produto não encontrado na base de dados!' });
         }
 
-        if(req.body.inatividade){
-            const sql = `UPDATE produto
-                         SET inatividade = ${req.body.inatividade}
-                         WHERE 
-                            id = ${req.params.id}`;
-            
-            const sql2 = `UPDATE estoque
-                          SET quantidade = 0
-                          WHERE 
-                            id = ${req.params.id}`;
-
-            await sequelize.query(sql, {
-                type: sequelize.QueryTypes.UPDATE
-            }).then(async resp => {
-                if(req.body.inatividade == false){
-                    await sequelize.query(sql2, {
-                        type: sequelize.QueryTypes.UPDATE
-                    });
-
-                    return res.json({ message: 'Produto desativado!' });
-                }
-                return res.json({ message: 'Produto ativado!' });
-            }).catch(err => {
-                return res.status(400).json({ error: 'Não foi possível desativar o produto!' });
-            });
-        }
-
-        if(verif_id[0].inatividade == 0 && req.body.inatividade == 0){
-            return res.status(400).json({ error: 'Produto já desativado na base de dados!' });
-        }
-
-        if(verif_id[0].inatividade == 1 && req.body.inatividade == 1){
-            return res.status(400).json({ error: 'Produto já ativado na base de dados!' });
+        if(verif_id[0].inatividade == 1){
+            return res.status(400).json({ error: 'Produto está desativado!' });
         }
 
         function updateQuery(){
